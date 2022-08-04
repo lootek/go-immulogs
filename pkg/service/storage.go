@@ -6,6 +6,9 @@ import (
 )
 
 type Storage interface {
+	Start() error
+	Stop() error
+
 	WriteOne(b bucket.Bucket, e log.Entry) error
 	WriteBatch(b bucket.Bucket, e []log.Entry) error
 

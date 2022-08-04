@@ -32,6 +32,15 @@ func NewREST(s Storage) *REST {
 				return nil, err
 			}
 
+			if entry == nil {
+				data, err := c.GetRawData()
+				if err != nil {
+					return nil, err
+				}
+
+				entry = log.FromBinary(data)
+			}
+
 			b := bucket.NewBucket(c.Param("bucket"))
 			return nil, addLog(s, b, entry)
 		}))

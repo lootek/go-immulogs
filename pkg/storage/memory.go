@@ -13,6 +13,14 @@ type Memory struct {
 	data   map[bucket.Bucket][]log.Entry
 }
 
+func (m *Memory) Start() error {
+	return nil
+}
+
+func (m *Memory) Stop() error {
+	return nil
+}
+
 func NewMemory() *Memory {
 	return &Memory{data: map[bucket.Bucket][]log.Entry{}}
 }
