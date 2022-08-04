@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"errors"
 	"sync"
 
@@ -13,7 +14,7 @@ type Memory struct {
 	data   map[bucket.Bucket][]log.Entry
 }
 
-func (m *Memory) Start() error {
+func (m *Memory) Start(_ context.Context) error {
 	return nil
 }
 
@@ -25,7 +26,7 @@ func NewMemory() *Memory {
 	return &Memory{data: map[bucket.Bucket][]log.Entry{}}
 }
 
-func (m *Memory) WriteOne(b bucket.Bucket, e log.Entry) error {
+func (m *Memory) WriteOne(b bucket.Bucket, e log.Entry) (map[string]any, error) {
 	m.dataMu.RLock()
 	defer m.dataMu.RUnlock()
 
@@ -33,10 +34,10 @@ func (m *Memory) WriteOne(b bucket.Bucket, e log.Entry) error {
 	entries = append(entries, e)
 	m.data[b] = entries
 
-	return nil
+	return map[string]any{"written": 1}, nil
 }
 
-func (m *Memory) WriteBatch(b bucket.Bucket, e []log.Entry) error {
+func (m *Memory) WriteBatch(b bucket.Bucket, e []log.Entry) (map[string]any, error) {
 	m.dataMu.RLock()
 	defer m.dataMu.RUnlock()
 
@@ -44,7 +45,7 @@ func (m *Memory) WriteBatch(b bucket.Bucket, e []log.Entry) error {
 	entries = append(entries, e...)
 	m.data[b] = entries
 
-	return nil
+	return map[string]any{"written": len(e)}, nil
 }
 
 func (m *Memory) All(b bucket.Bucket) ([]log.Entry, error) {

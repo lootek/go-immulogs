@@ -10,19 +10,28 @@ type Service interface {
 }
 
 type service struct {
-	service Service
+	storageService Service
+	ioService      Service
 }
 
-func NewService(io Service) *service {
+func NewService(storage Service, io Service) *service {
 	return &service{
-		service: io,
+		storageService: storage,
+		ioService:      io,
 	}
 }
 
 func (s service) Run(ctx context.Context) error {
 	errCh := make(chan error)
 	go func() {
-		if err := s.service.Start(ctx); err != nil {
+		if err := s.storageService.Start(ctx); err != nil {
+			errCh <- err
+			return
+		}
+	}()
+
+	go func() {
+		if err := s.ioService.Start(ctx); err != nil {
 			errCh <- err
 			return
 		}
@@ -30,14 +39,18 @@ func (s service) Run(ctx context.Context) error {
 
 	select {
 	case <-ctx.Done():
-	case <-errCh:
+		return ctx.Err()
+	case err := <-errCh:
+		return err
 	}
-
-	return nil
 }
 
 func (s service) Stop() error {
-	if err := s.service.Stop(); err != nil {
+	if err := s.ioService.Stop(); err != nil {
+		return err
+	}
+
+	if err := s.storageService.Stop(); err != nil {
 		return err
 	}
 

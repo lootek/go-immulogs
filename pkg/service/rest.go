@@ -38,11 +38,11 @@ func NewREST(s Storage) *REST {
 					return nil, err
 				}
 
-				entry = log.FromBinary(data)
+				entry = log.FromBytes(data)
 			}
 
 			b := bucket.NewBucket(c.Param("bucket"))
-			return nil, addLog(s, b, entry)
+			return addLog(s, b, entry)
 		}))
 		router.POST("/batch", ginWrapper(func(c *gin.Context) (gin.H, error) {
 			var entries []log.Entry
@@ -51,7 +51,7 @@ func NewREST(s Storage) *REST {
 			}
 
 			b := bucket.NewBucket(c.Param("bucket"))
-			return nil, addLogsBatch(s, b, entries)
+			return addLogsBatch(s, b, entries)
 		}))
 		router.GET("/last/:n", ginWrapper(func(c *gin.Context) (gin.H, error) {
 			n, err := strconv.ParseInt(c.Param("n"), 10, 64)
@@ -116,11 +116,11 @@ func (r REST) Stop() error {
 	return r.srv.Close()
 }
 
-func addLog(s Storage, b bucket.Bucket, e log.Entry) error {
+func addLog(s Storage, b bucket.Bucket, e log.Entry) (map[string]any, error) {
 	return s.WriteOne(b, e)
 }
 
-func addLogsBatch(s Storage, b bucket.Bucket, e []log.Entry) error {
+func addLogsBatch(s Storage, b bucket.Bucket, e []log.Entry) (map[string]any, error) {
 	return s.WriteBatch(b, e)
 }
 
