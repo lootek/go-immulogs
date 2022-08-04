@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"errors"
 	"sync"
 
 	"github.com/lootek/go-immulogs/pkg/storage/bucket"
@@ -53,6 +54,10 @@ func (m *Memory) All(b bucket.Bucket) ([]log.Entry, error) {
 func (m *Memory) Last(b bucket.Bucket, n uint64) ([]log.Entry, error) {
 	m.dataMu.RLock()
 	defer m.dataMu.RUnlock()
+
+	if b.String() == "" {
+		return nil, errors.New("empty bucket not supported in this context with in-memory storage")
+	}
 
 	entries := m.data[b]
 	cnt := uint64(len(entries))

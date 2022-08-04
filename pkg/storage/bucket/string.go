@@ -1,9 +1,17 @@
 package bucket
 
-type Bucket struct {
+type Bucket interface {
+	String() string
+}
+
+type bucket struct {
 	string
 }
 
 func NewBucket(s string) Bucket {
-	return Bucket{s}
+	return bucket{s}
+}
+
+func (b bucket) String() string {
+	return b.string
 }

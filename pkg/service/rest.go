@@ -33,8 +33,7 @@ func NewREST(s Storage) *REST {
 			}
 
 			b := bucket.NewBucket(c.Param("bucket"))
-			err := addLog(s, b, entry)
-			return nil, err
+			return nil, addLog(s, b, entry)
 		}))
 		router.POST("/batch", ginWrapper(func(c *gin.Context) (gin.H, error) {
 			var entries []log.Entry
@@ -43,8 +42,7 @@ func NewREST(s Storage) *REST {
 			}
 
 			b := bucket.NewBucket(c.Param("bucket"))
-			err := addLogsBatch(s, b, entries)
-			return nil, err
+			return nil, addLogsBatch(s, b, entries)
 		}))
 		router.GET("/last/:n", ginWrapper(func(c *gin.Context) (gin.H, error) {
 			n, err := strconv.ParseInt(c.Param("n"), 10, 64)
@@ -54,11 +52,19 @@ func NewREST(s Storage) *REST {
 
 			b := bucket.NewBucket(c.Param("bucket"))
 			entries, err := lastN(s, b, n)
+			if err != nil {
+				return nil, err
+			}
+
 			return map[string]any{"entries": entries}, err
 		}))
 		router.GET("/count", ginWrapper(func(c *gin.Context) (gin.H, error) {
 			b := bucket.NewBucket(c.Param("bucket"))
 			cnt, err := count(s, b)
+			if err != nil {
+				return nil, err
+			}
+
 			return map[string]any{"count": cnt}, err
 		}))
 	}
@@ -82,9 +88,11 @@ func ginWrapper(fn func(c *gin.Context) (gin.H, error)) func(c *gin.Context) {
 		if err != nil {
 			if res != nil {
 				c.JSON(http.StatusBadRequest, res)
-			} else {
-				c.JSON(http.StatusInternalServerError, nil)
+				return
 			}
+
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
 		}
 
 		c.JSON(http.StatusOK, res)
