@@ -1,7 +1,8 @@
 package storage
 
 import (
-	"github.com/lootek/go-immulogs"
+	"github.com/lootek/go-immulogs/pkg/storage/bucket"
+	"github.com/lootek/go-immulogs/pkg/storage/log"
 )
 
 type ImmuDB struct {
@@ -11,32 +12,27 @@ func NewImmuDB() *ImmuDB {
 	return &ImmuDB{}
 }
 
-func (i ImmuDB) WriteOne(immulogs.Bucket, immulogs.Entry) error {
+func (m ImmuDB) WriteOne(b bucket.Bucket, e log.Entry) error {
 	// TODO implement me
-	panic("implement me")
 	return nil
 }
 
-func (i ImmuDB) WriteBatch(immulogs.Bucket, []immulogs.Entry) error {
+func (m ImmuDB) WriteBatch(b bucket.Bucket, e []log.Entry) error {
 	// TODO implement me
-	panic("implement me")
 	return nil
 }
 
-func (i ImmuDB) All(immulogs.Bucket) ([]immulogs.Entry, error) {
+func (m ImmuDB) All(b bucket.Bucket) ([]log.Entry, error) {
 	// TODO implement me
-	panic("implement me")
 	return nil, nil
 }
 
-func (i ImmuDB) Last(immulogs.Bucket) ([]immulogs.Entry, error) {
+func (m ImmuDB) Last(b bucket.Bucket, n uint64) ([]log.Entry, error) {
 	// TODO implement me
-	panic("implement me")
 	return nil, nil
 }
 
-func (i ImmuDB) Count(immulogs.Bucket) (int64, error) {
+func (m ImmuDB) Count(b bucket.Bucket) (uint64, error) {
 	// TODO implement me
-	panic("implement me")
 	return 0, nil
 }

@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	s := immulogs.NewService(service.NewREST(), storage.NewMemory())
+	s := immulogs.NewService(service.NewREST(storage.NewMemory()))
 
 	ctx := context.Background()
 	if err := s.Run(ctx); err != nil {
