@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/codenotary/immudb v1.3.1
+	github.com/drhodes/golorem v0.0.0-20220328165741-da82e5b29246
 	github.com/gin-gonic/gin v1.8.1
 	github.com/urfave/cli/v2 v2.11.1
 )

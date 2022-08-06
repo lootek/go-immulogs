@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"time"
@@ -14,9 +15,12 @@ import (
 type REST struct {
 	srv     *http.Server
 	storage Storage
+
+	address string
+	timeout time.Duration
 }
 
-func NewREST(s Storage) *REST {
+func NewREST(s Storage, address string, timeout time.Duration) *REST {
 	globalRouter := gin.New()
 	globalRouter.Use(
 		gin.Logger(),
@@ -50,6 +54,23 @@ func NewREST(s Storage) *REST {
 				return nil, err
 			}
 
+			if entries == nil {
+				data, err := c.GetRawData()
+				if err != nil {
+					return nil, err
+				}
+
+				var logs []string
+				err = json.Unmarshal(data, &logs)
+				if err != nil {
+					return nil, err
+				}
+
+				for _, s := range logs {
+					entries = append(entries, log.FromString(s))
+				}
+			}
+
 			b := bucket.NewBucket(c.Param("bucket"))
 			return addLogsBatch(s, b, entries)
 		}))
@@ -80,10 +101,10 @@ func NewREST(s Storage) *REST {
 
 	r := &REST{
 		srv: &http.Server{
-			Addr:         ":8080",
+			Addr:         address,
 			Handler:      globalRouter,
-			ReadTimeout:  10 * time.Second,
-			WriteTimeout: 10 * time.Second,
+			ReadTimeout:  timeout,
+			WriteTimeout: timeout,
 		},
 	}
 
