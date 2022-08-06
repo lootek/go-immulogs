@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -50,20 +51,26 @@ func NewREST(s Storage, address string, timeout time.Duration) *REST {
 		}))
 		router.POST("/batch", ginWrapper(func(c *gin.Context) (gin.H, error) {
 			var entries []log.Entry
+
+			// try parsing input by gin framework
 			if err := c.Bind(&entries); err != nil {
 				return nil, err
 			}
 
+			// fallback to manual parsing
 			if entries == nil {
 				data, err := c.GetRawData()
 				if err != nil {
 					return nil, err
 				}
 
+				// try JSON-encoded list
 				var logs []string
 				err = json.Unmarshal(data, &logs)
 				if err != nil {
-					return nil, err
+
+					// fallback to splitting the given string by the newline character
+					logs = strings.Split(string(data), "\n")
 				}
 
 				for _, s := range logs {

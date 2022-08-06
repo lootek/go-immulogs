@@ -21,15 +21,37 @@ type ImmuDB struct {
 	ctx      context.Context
 	cancelFn context.CancelFunc
 
-	client immudb.ImmuClient
+	client ImmuClient
 	opts   *immudb.Options
 }
 
 func NewImmuDB(opts *immudb.Options) *ImmuDB {
 	return &ImmuDB{
-		client: immudb.NewClient().WithOptions(opts),
+		client: immuClientWrapper{immudb.NewClient().WithOptions(opts)},
 		opts:   opts,
 	}
+}
+
+// immuClientWrapper is a hack to make ImmuClient possible to implement locally (and mockable for tests)
+// immudb.ImmuClient is impossible to implement here directly as it relies on an unexported type immudb.*immuClient
+type immuClientWrapper struct {
+	immudb.ImmuClient
+}
+
+func (i immuClientWrapper) WithOptions(options *immudb.Options) ImmuClient {
+	i.ImmuClient.WithOptions(options)
+	return i
+}
+
+// ImmuClient is a subset of insanely huge immudb.ImmuClient
+// it contains only the functions we really need
+type ImmuClient interface {
+	OpenSession(ctx context.Context, user []byte, pass []byte, database string) (err error)
+	CloseSession(ctx context.Context) error
+	WithOptions(options *immudb.Options) ImmuClient
+	Set(ctx context.Context, key []byte, value []byte) (*schema.TxHeader, error)
+	Scan(ctx context.Context, req *schema.ScanRequest) (*schema.Entries, error)
+	SetAll(ctx context.Context, kvList *schema.SetRequest) (*schema.TxHeader, error)
 }
 
 func (i *ImmuDB) Start(ctx context.Context) error {
@@ -95,7 +117,7 @@ func (i *ImmuDB) Last(b bucket.Bucket, n uint64) ([]log.Entry, error) {
 	ctx, cancelFn := context.WithTimeout(i.ctx, defaultTimeout)
 	defer cancelFn()
 
-	history, err := i.client.Scan(ctx, &schema.ScanRequest{
+	scanned, err := i.client.Scan(ctx, &schema.ScanRequest{
 		Prefix: b.Bytes(),
 		Desc:   false,
 		Limit:  n,
@@ -105,7 +127,7 @@ func (i *ImmuDB) Last(b bucket.Bucket, n uint64) ([]log.Entry, error) {
 	}
 
 	var entries []log.Entry
-	for _, e := range history.Entries {
+	for _, e := range scanned.Entries {
 		entries = append(entries, log.FromBytes(e.Value))
 	}
 

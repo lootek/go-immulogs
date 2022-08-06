@@ -1,5 +1,9 @@
 package log
 
+import (
+	"encoding/json"
+)
+
 type Entry interface {
 	String() string
 	Bytes() []byte
@@ -8,8 +12,11 @@ type Entry interface {
 type entry string
 
 func (e *entry) UnmarshalJSON(bytes []byte) error {
-	s := entry(bytes)
-	e = &s
+	var s string
+	if err := json.Unmarshal(bytes, &s); err != nil {
+		return err
+	}
+	*e = entry(s)
 	return nil
 }
 
