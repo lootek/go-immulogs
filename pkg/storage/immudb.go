@@ -3,10 +3,12 @@ package storage
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/codenotary/immudb/pkg/api/schema"
 	immudb "github.com/codenotary/immudb/pkg/client"
+	"github.com/google/uuid"
 	"github.com/lootek/go-immulogs/pkg/storage/bucket"
 	"github.com/lootek/go-immulogs/pkg/storage/log"
 )
@@ -52,7 +54,7 @@ func (i *ImmuDB) WriteOne(b bucket.Bucket, e log.Entry) (map[string]any, error) 
 	ctx, cancelFn := context.WithTimeout(i.ctx, defaultTimeout)
 	defer cancelFn()
 
-	tx, err := i.client.Set(ctx, b.Bytes(), e.Bytes())
+	tx, err := i.client.Set(ctx, i.key(b), e.Bytes())
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +72,7 @@ func (i *ImmuDB) WriteBatch(b bucket.Bucket, e []log.Entry) (map[string]any, err
 
 	var KVs []*schema.KeyValue
 	for _, entry := range e {
-		KVs = append(KVs, &schema.KeyValue{Key: b.Bytes(), Value: entry.Bytes()})
+		KVs = append(KVs, &schema.KeyValue{Key: i.key(b), Value: entry.Bytes()})
 	}
 
 	tx, err := i.client.SetAll(ctx, &schema.SetRequest{KVs: KVs})
@@ -93,10 +95,10 @@ func (i *ImmuDB) Last(b bucket.Bucket, n uint64) ([]log.Entry, error) {
 	ctx, cancelFn := context.WithTimeout(i.ctx, defaultTimeout)
 	defer cancelFn()
 
-	history, err := i.client.History(ctx, &schema.HistoryRequest{
-		Key:   []byte(b.String()),
-		Limit: int32(n),
-		Desc:  false,
+	history, err := i.client.Scan(ctx, &schema.ScanRequest{
+		Prefix: b.Bytes(),
+		Desc:   false,
+		Limit:  n,
 	})
 	if err != nil {
 		return nil, err
@@ -111,11 +113,10 @@ func (i *ImmuDB) Last(b bucket.Bucket, n uint64) ([]log.Entry, error) {
 }
 
 func (i *ImmuDB) Count(b bucket.Bucket) (uint64, error) {
-	ctx, cancelFn := context.WithTimeout(i.ctx, defaultTimeout)
-	defer cancelFn()
+	entries, err := i.Last(b, 0)
+	return uint64(len(entries)), err
+}
 
-	// TODO: Add buckets support
-	count, err := i.client.CountAll(ctx)
-
-	return count.GetCount(), err
+func (i *ImmuDB) key(b bucket.Bucket) []byte {
+	return []byte(fmt.Sprintf("%s_%s", b.String(), uuid.NewString()))
 }
