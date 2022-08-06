@@ -1,0 +1,49 @@
+services:
+#  backend:
+#    build:
+#      context: backend
+#      target: builder
+#    secrets:
+#      - db-password
+#    depends_on:
+#      db:
+#        condition: service_healthy
+
+  immudb:
+    image: codenotary/immudb:latest
+#    restart: always
+#    healthcheck:
+#      test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 --password="$$(cat /run/secrets/db-password)" --silent']
+#      interval: 3s
+#      retries: 5
+#      start_period: 30s
+#    secrets:
+#      - immudb-password
+    volumes:
+      - db-data:/var/lib/immudb
+#    environment:
+#      - MYSQL_DATABASE=example
+#      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db-password
+    expose:
+      - 3322
+    ports:
+      - 8080:8080
+
+  immulogsd:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: lootek/go-immulogsd:latest
+    expose:
+      - 8000
+    ports:
+      - 8000:8000
+    depends_on:
+      - immudb
+
+volumes:
+  db-data:
+
+#secrets:
+#  immudb-password:
+#    file: db/password.txt

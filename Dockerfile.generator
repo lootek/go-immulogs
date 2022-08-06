@@ -1,0 +1,10 @@
+FROM golang:1.18-alpine AS builder
+
+WORKDIR /build
+COPY . .
+RUN CGO_ENABLED=0 go build -ldflags '-extldflags "-static"' -o logs-gen ./cmd/logs-gen/
+
+FROM scratch
+
+COPY --from=builder /build/logs-gen .
+ENTRYPOINT ["./logs-gen"]

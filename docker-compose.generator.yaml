@@ -1,0 +1,11 @@
+services:
+  logs-gen:
+    build:
+      context: .
+      dockerfile: Dockerfile.generator
+    image: lootek/go-immulogs-generator:latest
+    command:
+      - --rest-address
+      - http://immulogsd:8000/generator/batch
+    depends_on:
+      - immulogsd
