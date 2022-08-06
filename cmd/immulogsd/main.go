@@ -25,7 +25,7 @@ func main() {
 
 			// REST
 			&cli.StringFlag{Name: "rest-address", Value: "0.0.0.0:8000"},
-			&cli.Int64Flag{Name: "rest-timeout", Value: int64(10 * time.Second)},
+			&cli.Int64Flag{Name: "rest-timeout", Value: int64(3 * time.Second)},
 
 			// ImmuDB
 			&cli.IntFlag{Name: "immudb-port", Value: 3322},
@@ -33,7 +33,7 @@ func main() {
 			&cli.StringFlag{Name: "immudb-username", Value: "immudb"},
 			&cli.StringFlag{Name: "immudb-password", Value: "immudb"},
 			&cli.StringFlag{Name: "immudb-database", Value: "defaultdb"},
-			&cli.Int64Flag{Name: "immudb-timeout", Value: int64(10 * time.Second)},
+			&cli.Int64Flag{Name: "immudb-timeout", Value: int64(3 * time.Second)},
 		},
 		Action: func(cliCtx *cli.Context) error {
 			var storageService service.Storage

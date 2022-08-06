@@ -18,10 +18,10 @@ func main() {
 	app := &cli.App{
 		Name: "logs-gen",
 		Flags: []cli.Flag{
-			&cli.StringFlag{Name: "rest-address", Value: "http://localhost:8000/generator/batch"},
-			&cli.Int64Flag{Name: "rest-timeout", Value: int64(10 * time.Second)},
+			&cli.StringFlag{Name: "rest-address", Value: "http://localhost:8000/generator/add"},
+			&cli.Int64Flag{Name: "rest-timeout", Value: int64(3 * time.Second)},
 
-			&cli.Int64Flag{Name: "log-interval", Value: int64(10000 * time.Millisecond)},
+			&cli.Int64Flag{Name: "log-interval", Value: int64(10 * time.Second)},
 			&cli.Int64Flag{Name: "log-count", Value: int64(5)},
 		},
 		Action: func(cliCtx *cli.Context) error {
@@ -37,7 +37,7 @@ func main() {
 					return nil
 				case <-ticker.C:
 					entries := generateLogEntries(cliCtx.Int64("log-count"))
-					err := sendLogEntry(c, cliCtx.String("rest-address"), entries)
+					err := sendLogEntry(c, cliCtx.String("rest-address"), entries...)
 					if err != nil {
 						fmt.Println(err)
 						continue
@@ -52,7 +52,7 @@ func main() {
 	}
 }
 
-func sendLogEntry(cli *http.Client, uri string, entries []string) error {
+func sendLogEntry(cli *http.Client, uri string, entries ...string) error {
 	jsonData, err := json.Marshal(entries)
 	if err != nil {
 		return err

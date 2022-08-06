@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	defaultTimeout = 10 * time.Second
+	defaultTimeout = 3 * time.Second
 )
 
 type ImmuDB struct {
