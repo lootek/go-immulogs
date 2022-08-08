@@ -27,8 +27,8 @@ func NewMemory() *Memory {
 }
 
 func (m *Memory) WriteOne(b bucket.Bucket, e log.Entry) (map[string]any, error) {
-	m.dataMu.RLock()
-	defer m.dataMu.RUnlock()
+	m.dataMu.Lock()
+	defer m.dataMu.Unlock()
 
 	entries := m.data[b]
 	entries = append(entries, e)
@@ -38,8 +38,8 @@ func (m *Memory) WriteOne(b bucket.Bucket, e log.Entry) (map[string]any, error) 
 }
 
 func (m *Memory) WriteBatch(b bucket.Bucket, e []log.Entry) (map[string]any, error) {
-	m.dataMu.RLock()
-	defer m.dataMu.RUnlock()
+	m.dataMu.Lock()
+	defer m.dataMu.Unlock()
 
 	entries := m.data[b]
 	entries = append(entries, e...)
